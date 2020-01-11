@@ -826,7 +826,7 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
           splitCols(tableGroups, splitColIndex, totalHits);
         }
 
-        let indexColumn = {
+        let computedIndexColumn = {
           label: 'Index',
           format: 'number',
           pattern: '0',
@@ -839,14 +839,15 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
           template: '{{value}}',
           enabled: true
         }
+        let indexColumn = createColumn(computedIndexColumn, 0, totalHits, splitColIndex, firstTable.columns, params.totalFunc);
 
         addIndexColumnToTables(tableGroups.tables, indexColumn, totalHits);
 
         // add computed columns
         _.forEach(params.computedColumns, function (computedColumn, index) {
           if (computedColumn.enabled) {
-            let newColumn = createColumn(computedColumn, index, totalHits, splitColIndex, firstTable.columns, params.totalFunc);
-            addComputedColumnToTables(tableGroups.tables, index, newColumn, totalHits);
+            let newColumn = createColumn(computedColumn, index+1, totalHits, splitColIndex, firstTable.columns, params.totalFunc);
+            addComputedColumnToTables(tableGroups.tables, index+1, newColumn, totalHits);
           }
         });
 
