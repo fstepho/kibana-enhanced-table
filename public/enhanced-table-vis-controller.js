@@ -70,7 +70,7 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
 
   const findSplitColIndex = function (table) {
     if (table !== null) {
-      return _.findIndex(table.columns, col => col.aggConfig.schema.name === 'splitcols');
+      return _.findIndex(table.columns, col => col.aggConfig && col.aggConfig.schema.name === 'splitcols');
     }
     else {
       return -1;
@@ -376,10 +376,10 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
         return;
       }
 
-      table.columns.push(newColumn);
+      table.columns.unshift(newColumn);
       _.forEach(table.rows, function (row) {
         const newCell = createIndexCell(newColumn, row, totalHits, table);
-        row.push(newCell);
+        row.unshift(newCell);
         row[newColumn.id] = newCell.value;
       });
     });
@@ -826,8 +826,9 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
           splitCols(tableGroups, splitColIndex, totalHits);
         }
 
+
         let computedIndexColumn = {
-          label: 'Index',
+          label: '#',
           format: 'number',
           pattern: '0',
           datePattern: 'MMMM Do YYYY, HH:mm:ss.SSS',
