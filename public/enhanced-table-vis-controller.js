@@ -314,7 +314,7 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
       title: computedColumn.label,
       fieldFormatter: new FieldFormat(fieldFormatParams, getConfig),
       dataAlignmentClass: `text-${computedColumn.alignment}`,
-      formula: createFormula(computedColumn.formula, 'computed column', splitColIndex, columns, totalFunc),
+      formula: computedColumn.formula ? createFormula(computedColumn.formula, 'computed column', splitColIndex, columns, totalFunc) : null,
       template: createTemplate(computedColumn, splitColIndex, columns, totalFunc)
     };
     newColumn.aggConfig.id = `1.computed-column-${index}`;
@@ -355,6 +355,34 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
       result = { 'markup': result, 'class': this.column.dataAlignmentClass };
     }
     return result;
+  };
+
+  const createIndexCell = function (column, row, totalHits, table) {
+    const value = table.rows.findIndex(rowTable => rowTable[0].key=== row[0].key) + 1;
+
+    const newCell = new AggConfigResult(column.aggConfig, parent, value, value);
+    newCell.column = column;
+    if (column.template !== undefined) {
+      newCell.templateContext = createTemplateContext(column, row, totalHits, table);
+    }
+    newCell.toString = renderCell;
+    return newCell;
+  };
+  
+  const addIndexColumnToTables = function (tables, newColumn, totalHits) {
+    _.forEach(tables, function (table) {
+      if (table.tables) {
+        addIndexColumnToTables(table.tables, newColumn, totalHits);
+        return;
+      }
+
+      table.columns.push(newColumn);
+      _.forEach(table.rows, function (row) {
+        const newCell = createIndexCell(newColumn, row, totalHits, table);
+        row.push(newCell);
+        row[newColumn.id] = newCell.value;
+      });
+    });
   };
 
   const createComputedCell = function (column, row, totalHits, table) {
@@ -797,6 +825,22 @@ module.controller('EnhancedTableVisController', function ($scope, Private, confi
         if (splitColIndex != -1 && !params.computedColsPerSplitCol) {
           splitCols(tableGroups, splitColIndex, totalHits);
         }
+
+        let indexColumn = {
+          label: 'Index',
+          format: 'number',
+          pattern: '0',
+          datePattern: 'MMMM Do YYYY, HH:mm:ss.SSS',
+          alignment: 'left',
+          applyAlignmentOnTitle: true,
+          applyAlignmentOnTotal: true,
+          applyTemplate: false,
+          applyTemplateOnTotal: true,
+          template: '{{value}}',
+          enabled: true
+        }
+
+        addIndexColumnToTables(tableGroups.tables, indexColumn, totalHits);
 
         // add computed columns
         _.forEach(params.computedColumns, function (computedColumn, index) {
