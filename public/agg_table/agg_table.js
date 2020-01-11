@@ -106,6 +106,9 @@ uiModules
           $scope.rows = table.rows;
           $scope.formattedColumns = table.columns.map(function (col, i) {
             const agg = col.aggConfig;
+            if (!agg){
+              return;
+            }
             const field = agg.getField();
             const formattedColumn = {
               title: col.title,
